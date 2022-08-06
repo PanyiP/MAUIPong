@@ -5,4 +5,12 @@
     <IsFirstTimeProjectOpen>False</IsFirstTimeProjectOpen>
     <ActiveDebugProfile>Windows Machine</ActiveDebugProfile>
   </PropertyGroup>
+  <ItemGroup>
+    <MauiXaml Update="Views\GamePage.xaml">
+      <SubType>Designer</SubType>
+    </MauiXaml>
+    <MauiXaml Update="Views\GameView.xaml">
+      <SubType>Designer</SubType>
+    </MauiXaml>
+  </ItemGroup>
 </Project>
