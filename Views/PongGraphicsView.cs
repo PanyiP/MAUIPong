@@ -52,7 +52,7 @@ public class PongGraphicsView : GraphicsView
 
    public PongGraphicsView()
    {
-      base.Drawable = Drawable = new PongDrawable();
+      base.Drawable = Drawable = new PongDrawable(fps);
 
       var ms = 1000.0 / fps;
       var ts = TimeSpan.FromMilliseconds(ms);

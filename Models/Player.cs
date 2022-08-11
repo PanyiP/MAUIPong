@@ -1,7 +1,9 @@
 ﻿namespace MAUIPong.Models;
 
+[Serializable]
 public class Player
 {
+   public string ID { get; } = Guid.NewGuid().ToString();
    public string Name { get; set; } = "Default";
    public Color PlayerColor { get; set; } = Colors.White;
 

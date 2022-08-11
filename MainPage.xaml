@@ -16,29 +16,36 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
          </Grid.RowDefinitions>
 
          <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
          </Grid.ColumnDefinitions>
 
-         <Entry Grid.Row="0" Grid.Column="1" Margin="0,10,0,10"
-                Text="{Binding IPAddress}"
-                Keyboard="Numeric" />
+         <Entry Grid.Row="0" Grid.Column="0" Margin="0,10,0,10" HorizontalOptions="CenterAndExpand"
+                Text="{Binding IPAddress}" Placeholder="Server IP Address"
+                Keyboard="Default" />
 
-         <Button Grid.Row="1" Grid.Column="1" Margin="0,10,0,10"
+         <Entry Grid.Row="1" Grid.Column="0" Margin="0,10,0,10" HorizontalOptions="CenterAndExpand"
+                Text="{Binding PlayerName}" Placeholder="Player name"
+                Keyboard="Default" />
+
+         <Button Grid.Row="2" Grid.Column="0" Margin="0,10,0,10" HorizontalOptions="CenterAndExpand"
+                 Command="{Binding StartServerCommand}"
+                 Text="Start server" />
+         
+         <Button Grid.Row="3" Grid.Column="0" Margin="0,10,0,10" HorizontalOptions="CenterAndExpand"
                  Command="{Binding ConnectToServerCommand}"
                  Text="Connect to server" />
 
-         <Button Grid.Row="2" Grid.Column="1" Margin="0,10,0,10"
-                 Command="{Binding StartServerCommand}"
-                 Text="Start server" />
-
-         <Button Grid.Row="3" Grid.Column="1" Margin="0,10,0,10"
-                 Command="{Binding PlayCommand}"
+         <Button Grid.Row="4" Grid.Column="0" Margin="0,10,0,10" HorizontalOptions="CenterAndExpand"
+                 Command="{Binding PlayCommand}" IsEnabled="{Binding IsPlayButtonEnabled}"
                  Text="Play!" />
+
+         <Label Grid.Row="5" Grid.Column="0" Margin="0,10,0,10" HorizontalOptions="CenterAndExpand"
+                Text="{Binding MessageLabelText}" />
       </Grid>
    </ScrollView>
 

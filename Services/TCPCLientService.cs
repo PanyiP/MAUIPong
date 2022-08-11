@@ -1,18 +1,33 @@
-﻿using System.Diagnostics;
+﻿using MAUIPong.Models;
+using System.Diagnostics;
 using System.Net.Sockets;
-using System.Text;
 
 namespace MAUIPong.Services;
 
-public class TCPCLientService
+public class TCPClientService
 {
    #region Singleton Pattern
-   private TCPCLientService()
+   private TCPClientService()
    {
-      IPAddress = "127.0.0.1";
       PortNumber = 27015;
    }
-   public static TCPCLientService Instance { get; } = new TCPCLientService();
+   public static TCPClientService Instance { get; } = new TCPClientService();
+   #endregion
+
+   #region Events
+   public class PlayerEventArgs : EventArgs
+   {
+      public Player Player { get; set; }
+   }
+
+   public class BallEventArgs : EventArgs
+   {
+      public Ball Ball { get; set; }
+   }
+
+   public event EventHandler<PlayerEventArgs> OnTCPClientConnectionSuccessful;
+   public event EventHandler<PlayerEventArgs> OnTCPClientPlayerDataReceived;
+   public event EventHandler<BallEventArgs> OnTCPClientBallDataReceived;
    #endregion
 
    private TcpClient socketConnection;
@@ -24,10 +39,19 @@ public class TCPCLientService
    /// <summary> 	
    /// Setup socket connection. 	
    /// </summary> 	
-   public void ConnectToTcpServer()
+   public void ConnectToTcpServer(Player player)
    {
       try
       {
+         socketConnection = new TcpClient(IPAddress, PortNumber);
+
+         TCPMessage msg = new TCPMessage()
+         {
+            Type = TCPMessageType.PlayerConnected,
+            Player = player,
+         };
+         SendMessage(TCPHelperService.Serialize(msg));
+
          clientReceiveThread = new Thread(new ThreadStart(ListenForData));
          clientReceiveThread.IsBackground = true;
          clientReceiveThread.Start();
@@ -45,22 +69,38 @@ public class TCPCLientService
    {
       try
       {
-         socketConnection = new TcpClient(IPAddress, PortNumber);
          Byte[] bytes = new Byte[1024];
          while (true)
          {
-            // Get a stream object for reading 				
-            using (NetworkStream stream = socketConnection.GetStream())
+            // Get a stream object for reading
+            using NetworkStream stream = socketConnection.GetStream();
+            int length;
+            // Read incomming stream into byte arrary.
+            while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
             {
-               int length;
-               // Read incomming stream into byte arrary. 					
-               while ((length = stream.Read(bytes, 0, bytes.Length)) != 0)
+               var incomingData = new byte[length];
+               Array.Copy(bytes, 0, incomingData, 0, length);
+               // Convert byte array to object
+               TCPMessage msg = TCPHelperService.Deserialize<TCPMessage>(incomingData);
+
+               switch (msg.Type)
                {
-                  var incommingData = new byte[length];
-                  Array.Copy(bytes, 0, incommingData, 0, length);
-                  // Convert byte array to string message. 						
-                  string serverMessage = Encoding.ASCII.GetString(incommingData);
-                  Debug.WriteLine("server message received as: " + serverMessage);
+                  case TCPMessageType.PlayerConnected:
+                     OnTCPClientConnectionSuccessful?.Invoke(this, new PlayerEventArgs() { Player = msg.Player });
+                     Debug.WriteLine("server message received: PlayerConnected");
+                     break;
+                  case TCPMessageType.PlayerDisconnected:
+                     break;
+                  case TCPMessageType.PlayerDataUpdate:
+                     OnTCPClientPlayerDataReceived?.Invoke(this, new PlayerEventArgs() { Player = msg.Player });
+                     Debug.WriteLine("server message received: PlayerDataUpdate");
+                     break;
+                  case TCPMessageType.BallDataUpdate:
+                     OnTCPClientBallDataReceived?.Invoke(this, new BallEventArgs() { Ball = msg.Ball });
+                     Debug.WriteLine("server message received: BallDataUpdate");
+                     break;
+                  default:
+                     break;
                }
             }
          }
@@ -71,25 +111,24 @@ public class TCPCLientService
       }
    }
 
-   /// <summary> 	
-   /// Send message to server using socket connection. 	
-   /// </summary> 	
-   public void SendMessage(string clientMessage = "This is a message from one of your clients.")
+   /// <summary>
+   /// Send message to server using socket connection.
+   /// </summary>
+   public void SendMessage(byte[] message)
    {
       if (socketConnection == null)
       {
          return;
       }
+
       try
       {
-         // Get a stream object for writing. 			
+         // Get a stream object for writing.
          NetworkStream stream = socketConnection.GetStream();
          if (stream.CanWrite)
          {
-            // Convert string message to byte array.                 
-            byte[] clientMessageAsByteArray = Encoding.ASCII.GetBytes(clientMessage);
-            // Write byte array to socketConnection stream.                 
-            stream.Write(clientMessageAsByteArray, 0, clientMessageAsByteArray.Length);
+            // Write byte array to socketConnection stream.
+            stream.Write(message, 0, message.Length);
             Debug.WriteLine("Client sent his message - should be received by server");
          }
       }
